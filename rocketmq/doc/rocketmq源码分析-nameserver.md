@@ -52,7 +52,7 @@ RocketMq是基于主题的发布与订阅模式，核心功能包括消息发送
 ```java
 public static NamesrvController main0(String[] args) {
 
-    try {
+        try {
         //创建namesrvController
         NamesrvController controller = createNamesrvController(args);
         //初始化并启动NamesrvController
@@ -61,13 +61,13 @@ public static NamesrvController main0(String[] args) {
         log.info(tip);
         System.out.printf("%s%n", tip);
         return controller;
-    } catch (Throwable e) {
+        } catch (Throwable e) {
         e.printStackTrace();
         System.exit(-1);
-    }
+        }
 
-    return null;
-}
+        return null;
+        }
 ```
 
 通过main方法启动nameserver，主要分为两大步，先创建namesrvController，然后再初始化并启动NamesrvController。我们分别展开来分析。
@@ -84,75 +84,75 @@ public static NamesrvController main0(String[] args) {
 
 ```java
 public static NamesrvController createNamesrvController(String[] args) throws IOException, JoranException {
-    // 设置版本号为当前版本号
-    System.setProperty(RemotingCommand.REMOTING_VERSION_KEY, Integer.toString(MQVersion.CURRENT_VERSION));
-    //PackageConflictDetect.detectFastjson();
-	//构造org.apache.commons.cli.Options,并添加-h -n参数，-h参数是打印帮助信息，-n参数是指定namesrvAddr
-    Options options = ServerUtil.buildCommandlineOptions(new Options());
-    //初始化commandLine，并在options中添加-c -p参数，-c指定nameserver的配置文件路径，-p标识打印配置信息
-    commandLine = ServerUtil.parseCmdLine("mqnamesrv", args, buildCommandlineOptions(options), new PosixParser());
-    if (null == commandLine) {
+        // 设置版本号为当前版本号
+        System.setProperty(RemotingCommand.REMOTING_VERSION_KEY, Integer.toString(MQVersion.CURRENT_VERSION));
+        //PackageConflictDetect.detectFastjson();
+        //构造org.apache.commons.cli.Options,并添加-h -n参数，-h参数是打印帮助信息，-n参数是指定namesrvAddr
+        Options options = ServerUtil.buildCommandlineOptions(new Options());
+        //初始化commandLine，并在options中添加-c -p参数，-c指定nameserver的配置文件路径，-p标识打印配置信息
+        commandLine = ServerUtil.parseCmdLine("mqnamesrv", args, buildCommandlineOptions(options), new PosixParser());
+        if (null == commandLine) {
         System.exit(-1);
         return null;
-    }
-	//nameserver配置类，业务参数
-    final NamesrvConfig namesrvConfig = new NamesrvConfig();
-    //netty服务器配置类，网络参数
-    final NettyServerConfig nettyServerConfig = new NettyServerConfig();
-    //设置nameserver的端口号
-    nettyServerConfig.setListenPort(9876);
-    //命令带有-c参数，说明指定配置文件，需要根据配置文件路径读取配置文件内容，并将文件中配置信息赋值给NamesrvConfig和NettyServerConfig
-    if (commandLine.hasOption('c')) {
+        }
+//nameserver配置类，业务参数
+final NamesrvConfig namesrvConfig = new NamesrvConfig();
+//netty服务器配置类，网络参数
+final NettyServerConfig nettyServerConfig = new NettyServerConfig();
+        //设置nameserver的端口号
+        nettyServerConfig.setListenPort(9876);
+        //命令带有-c参数，说明指定配置文件，需要根据配置文件路径读取配置文件内容，并将文件中配置信息赋值给NamesrvConfig和NettyServerConfig
+        if (commandLine.hasOption('c')) {
         String file = commandLine.getOptionValue('c');
         if (file != null) {
-            InputStream in = new BufferedInputStream(new FileInputStream(file));
-            properties = new Properties();
-            properties.load(in);
-            //反射的方式
-            MixAll.properties2Object(properties, namesrvConfig);
-            MixAll.properties2Object(properties, nettyServerConfig);
-			//设置配置文件路径
-            namesrvConfig.setConfigStorePath(file);
+        InputStream in = new BufferedInputStream(new FileInputStream(file));
+        properties = new Properties();
+        properties.load(in);
+        //反射的方式
+        MixAll.properties2Object(properties, namesrvConfig);
+        MixAll.properties2Object(properties, nettyServerConfig);
+        //设置配置文件路径
+        namesrvConfig.setConfigStorePath(file);
 
-            System.out.printf("load config properties file OK, %s%n", file);
-            in.close();
+        System.out.printf("load config properties file OK, %s%n", file);
+        in.close();
         }
-    }
-	//命令行带有-p，说明是打印参数的命令，那么就打印出NamesrvConfig和NettyServerConfig的属性。在启动NameServer时可以先使用./mqnameserver -c configFile -p打印当前加载的配置属性 
-    if (commandLine.hasOption('p')) {
+        }
+        //命令行带有-p，说明是打印参数的命令，那么就打印出NamesrvConfig和NettyServerConfig的属性。在启动NameServer时可以先使用./mqnameserver -c configFile -p打印当前加载的配置属性 
+        if (commandLine.hasOption('p')) {
         InternalLogger console = InternalLoggerFactory.getLogger(LoggerName.NAMESRV_CONSOLE_NAME);
         MixAll.printObjectProperties(console, namesrvConfig);
         MixAll.printObjectProperties(console, nettyServerConfig);
         //打印参数命令不需要启动nameserver服务，只需要打印参数即可
         System.exit(0);
-    }
-	//解析命令行参数，并加载到namesrvConfig中
-    MixAll.properties2Object(ServerUtil.commandLine2Properties(commandLine), namesrvConfig);
-	//检查ROCKETMQ_HOME，不能为空
-    if (null == namesrvConfig.getRocketmqHome()) {
+        }
+        //解析命令行参数，并加载到namesrvConfig中
+        MixAll.properties2Object(ServerUtil.commandLine2Properties(commandLine), namesrvConfig);
+        //检查ROCKETMQ_HOME，不能为空
+        if (null == namesrvConfig.getRocketmqHome()) {
         System.out.printf("Please set the %s variable in your environment to match the location of the RocketMQ installation%n", MixAll.ROCKETMQ_HOME_ENV);
         System.exit(-2);
-    }
-	//初始化logback日志工厂，rocketmq默认使用logback作为日志输出
-    LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
-    JoranConfigurator configurator = new JoranConfigurator();
-    configurator.setContext(lc);
-    lc.reset();
-    configurator.doConfigure(namesrvConfig.getRocketmqHome() + "/conf/logback_namesrv.xml");
+        }
+        //初始化logback日志工厂，rocketmq默认使用logback作为日志输出
+        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        JoranConfigurator configurator = new JoranConfigurator();
+        configurator.setContext(lc);
+        lc.reset();
+        configurator.doConfigure(namesrvConfig.getRocketmqHome() + "/conf/logback_namesrv.xml");
 
-    log = InternalLoggerFactory.getLogger(LoggerName.NAMESRV_LOGGER_NAME);
+        log = InternalLoggerFactory.getLogger(LoggerName.NAMESRV_LOGGER_NAME);
 
-    MixAll.printObjectProperties(log, namesrvConfig);
-    MixAll.printObjectProperties(log, nettyServerConfig);
-	//创建NamesrvController
-    final NamesrvController controller = new NamesrvController(namesrvConfig, nettyServerConfig);
+        MixAll.printObjectProperties(log, namesrvConfig);
+        MixAll.printObjectProperties(log, nettyServerConfig);
+//创建NamesrvController
+final NamesrvController controller = new NamesrvController(namesrvConfig, nettyServerConfig);
 
-    //将全局Properties的内容复制到NamesrvController.Configuration.allConfigs中
-    // remember all configs to prevent discard
-    controller.getConfiguration().registerConfig(properties);
+        //将全局Properties的内容复制到NamesrvController.Configuration.allConfigs中
+        // remember all configs to prevent discard
+        controller.getConfiguration().registerConfig(properties);
 
-    return controller;
-}
+        return controller;
+        }
 ```
 
 通过上面对每一行代码的注释，可以看出来，创建`NamesrvController`的过程主要分为两步：
@@ -198,73 +198,73 @@ public static NamesrvController createNamesrvController(String[] args) throws IO
 
 ```java
 public boolean initialize() {
-	//加载kvConfigPath下kvConfig.json配置文件里的KV配置，然后将这些配置放到KVConfigManager#configTable属性中
-    this.kvConfigManager.load();
-	//根据nettyServerConfig初始化一个netty服务器。
-    //brokerHousekeepingService是在NamesrvController实例化时构造函数里实例化的，该类负责Broker连接事件的处理，实现了ChannelEventListener，主要用来管理RouteInfoManager的brokerLiveTable
-    this.remotingServer = new NettyRemotingServer(this.nettyServerConfig, this.brokerHousekeepingService);
-	//初始化负责处理Netty网络交互数据的线程池，默认线程数是8个
-    this.remotingExecutor =
+        //加载kvConfigPath下kvConfig.json配置文件里的KV配置，然后将这些配置放到KVConfigManager#configTable属性中
+        this.kvConfigManager.load();
+        //根据nettyServerConfig初始化一个netty服务器。
+        //brokerHousekeepingService是在NamesrvController实例化时构造函数里实例化的，该类负责Broker连接事件的处理，实现了ChannelEventListener，主要用来管理RouteInfoManager的brokerLiveTable
+        this.remotingServer = new NettyRemotingServer(this.nettyServerConfig, this.brokerHousekeepingService);
+        //初始化负责处理Netty网络交互数据的线程池，默认线程数是8个
+        this.remotingExecutor =
         Executors.newFixedThreadPool(nettyServerConfig.getServerWorkerThreads(), new ThreadFactoryImpl("RemotingExecutorThread_"));
-	//注册Netty服务端业务处理逻辑，如果开启了clusterTest，那么注册的请求处理类是ClusterTestRequestProcessor，否则请求处理类是DefaultRequestProcessor
-    this.registerProcessor();
-	//注册心跳机制线程池，延迟5秒启动，每隔10秒遍历RouteInfoManager#brokerLiveTable这个属性，用来扫描不存活的broker
-    this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
+        //注册Netty服务端业务处理逻辑，如果开启了clusterTest，那么注册的请求处理类是ClusterTestRequestProcessor，否则请求处理类是DefaultRequestProcessor
+        this.registerProcessor();
+        //注册心跳机制线程池，延迟5秒启动，每隔10秒遍历RouteInfoManager#brokerLiveTable这个属性，用来扫描不存活的broker
+        this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
-        @Override
-        public void run() {
-            NamesrvController.this.routeInfoManager.scanNotActiveBroker();
+@Override
+public void run() {
+        NamesrvController.this.routeInfoManager.scanNotActiveBroker();
         }
-    }, 5, 10, TimeUnit.SECONDS);
-	//注册打印KV配置线程池，延迟1分钟启动、每10分钟打印出kvConfig配置
-    this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
+        }, 5, 10, TimeUnit.SECONDS);
+        //注册打印KV配置线程池，延迟1分钟启动、每10分钟打印出kvConfig配置
+        this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
-        @Override
-        public void run() {
-            NamesrvController.this.kvConfigManager.printAllPeriodically();
+@Override
+public void run() {
+        NamesrvController.this.kvConfigManager.printAllPeriodically();
         }
-    }, 1, 10, TimeUnit.MINUTES);
-	//rocketmq可以通过开启TLS来提高数据传输的安全性，如果开启了，那么需要注册一个监听器来重新加载SslContext
-    if (TlsSystemConfig.tlsMode != TlsMode.DISABLED) {
+        }, 1, 10, TimeUnit.MINUTES);
+        //rocketmq可以通过开启TLS来提高数据传输的安全性，如果开启了，那么需要注册一个监听器来重新加载SslContext
+        if (TlsSystemConfig.tlsMode != TlsMode.DISABLED) {
         // Register a listener to reload SslContext
         try {
-            fileWatchService = new FileWatchService(
-                new String[] {
-                    TlsSystemConfig.tlsServerCertPath,
-                    TlsSystemConfig.tlsServerKeyPath,
-                    TlsSystemConfig.tlsServerTrustCertPath
-                },
-                new FileWatchService.Listener() {
-                    boolean certChanged, keyChanged = false;
-                    @Override
-                    public void onChanged(String path) {
-                        if (path.equals(TlsSystemConfig.tlsServerTrustCertPath)) {
-                            log.info("The trust certificate changed, reload the ssl context");
-                            reloadServerSslContext();
-                        }
-                        if (path.equals(TlsSystemConfig.tlsServerCertPath)) {
-                            certChanged = true;
-                        }
-                        if (path.equals(TlsSystemConfig.tlsServerKeyPath)) {
-                            keyChanged = true;
-                        }
-                        if (certChanged && keyChanged) {
-                            log.info("The certificate and private key changed, reload the ssl context");
-                            certChanged = keyChanged = false;
-                            reloadServerSslContext();
-                        }
-                    }
-                    private void reloadServerSslContext() {
-                        ((NettyRemotingServer) remotingServer).loadSslContext();
-                    }
-                });
-        } catch (Exception e) {
-            log.warn("FileWatchService created error, can't load the certificate dynamically");
+        fileWatchService = new FileWatchService(
+        new String[] {
+        TlsSystemConfig.tlsServerCertPath,
+        TlsSystemConfig.tlsServerKeyPath,
+        TlsSystemConfig.tlsServerTrustCertPath
+        },
+        new FileWatchService.Listener() {
+        boolean certChanged, keyChanged = false;
+@Override
+public void onChanged(String path) {
+        if (path.equals(TlsSystemConfig.tlsServerTrustCertPath)) {
+        log.info("The trust certificate changed, reload the ssl context");
+        reloadServerSslContext();
         }
-    }
+        if (path.equals(TlsSystemConfig.tlsServerCertPath)) {
+        certChanged = true;
+        }
+        if (path.equals(TlsSystemConfig.tlsServerKeyPath)) {
+        keyChanged = true;
+        }
+        if (certChanged && keyChanged) {
+        log.info("The certificate and private key changed, reload the ssl context");
+        certChanged = keyChanged = false;
+        reloadServerSslContext();
+        }
+        }
+private void reloadServerSslContext() {
+        ((NettyRemotingServer) remotingServer).loadSslContext();
+        }
+        });
+        } catch (Exception e) {
+        log.warn("FileWatchService created error, can't load the certificate dynamically");
+        }
+        }
 
-    return true;
-}
+        return true;
+        }
 ```
 
 上面的代码是NameServer初始化流程，通过每行代码的注释，我们可以看出来，主要有5步骤操作：
@@ -279,25 +279,25 @@ public boolean initialize() {
 
 ```java
 Runtime.getRuntime().addShutdownHook(new ShutdownHookThread(log, new Callable<Void>() {
-    @Override
-    public Void call() throws Exception {
+@Override
+public Void call() throws Exception {
         controller.shutdown();
         return null;
-    }
-}));
+        }
+        }));
 ```
 
 3. 执行start函数，启动nameserver。代码比较简单，就是将第一步中创建的netty server进行启动。其中`remotingServer.start()`方法不展开详细说明了，需要对netty比较熟悉，不是本篇文章重点，有兴趣的同学可以自行下载源码阅读。
 
 ```java
 public void start() throws Exception {
-    //启动netty服务
-    this.remotingServer.start();
-	//如果开启了TLS
-    if (this.fileWatchService != null) {
+        //启动netty服务
+        this.remotingServer.start();
+        //如果开启了TLS
+        if (this.fileWatchService != null) {
         this.fileWatchService.start();
-    }
-}
+        }
+        }
 ```
 
 ## 4、路由管理
@@ -957,30 +957,30 @@ private void startScheduledTask() {
     ......
     this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
-@Override
-public void run() {
-    try {
-    //从nameserver更新最新的topic路由信息
-    MQClientInstance.this.updateTopicRouteInfoFromNameServer();
-    } catch (Exception e) {
-    log.error("ScheduledTask updateTopicRouteInfoFromNameServer exception", e);
-    }
-    }
+        @Override
+        public void run() {
+            try {
+                //从nameserver更新最新的topic路由信息
+                MQClientInstance.this.updateTopicRouteInfoFromNameServer();
+            } catch (Exception e) {
+                log.error("ScheduledTask updateTopicRouteInfoFromNameServer exception", e);
+            }
+        }
     }, 10, this.clientConfig.getPollNameServerInterval(), TimeUnit.MILLISECONDS);
 
     ......
-    }
+}
 
 /**
- * 从nameserver获取topic路由信息
- */
+    * 从nameserver获取topic路由信息
+    */
 public TopicRouteData getTopicRouteInfoFromNameServer(final String topic, final long timeoutMillis,
-    boolean allowTopicNotExist) throws MQClientException, InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException {
+                                                      boolean allowTopicNotExist) throws MQClientException, InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException {
     ......
     //向nameserver发送请求包，requestCode为RequestCode.GET_ROUTEINFO_BY_TOPIC
     RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.GET_ROUTEINFO_BY_TOPIC, requestHeader);
-    ......
-    }
+	......
+}
 ```
 
 producer和nameserver之间通过netty进行网络传输，producer向nameserver发起的请求中添加注册码`RequestCode.GET_ROUTEINFO_BY_TOPIC`。
@@ -1019,89 +1019,89 @@ public TopicRouteData pickupTopicRouteData(final String topic) {
     topicRouteData.setFilterServerTable(filterServerMap);
 
     try {
-    try {
-    //加读锁
-    this.lock.readLock().lockInterruptibly();
-    //从元数据topicQueueTable中根据topic名字获取队列集合
-    List<QueueData> queueDataList = this.topicQueueTable.get(topic);
-    if (queueDataList != null) {
-    //将获取到的队列集合写入topicRouteData的queueDatas中
-    topicRouteData.setQueueDatas(queueDataList);
-    foundQueueData = true;
+        try {
+            //加读锁
+            this.lock.readLock().lockInterruptibly();
+            //从元数据topicQueueTable中根据topic名字获取队列集合
+            List<QueueData> queueDataList = this.topicQueueTable.get(topic);
+            if (queueDataList != null) {
+                //将获取到的队列集合写入topicRouteData的queueDatas中
+                topicRouteData.setQueueDatas(queueDataList);
+                foundQueueData = true;
 
-    Iterator<QueueData> it = queueDataList.iterator();
-    while (it.hasNext()) {
-    QueueData qd = it.next();
-    brokerNameSet.add(qd.getBrokerName());
-    }
-    //遍历从QueueData集合中提取的brokerName
-    for (String brokerName : brokerNameSet) {
-    //根据brokerName从brokerAddrTable获取brokerData
-    BrokerData brokerData = this.brokerAddrTable.get(brokerName);
-    if (null != brokerData) {
-    //克隆brokerData对象，并写入到topicRouteData的brokerDatas中
-    BrokerData brokerDataClone = new BrokerData(brokerData.getCluster(), brokerData.getBrokerName(), (HashMap<Long, String>) brokerData.getBrokerAddrs().clone());
-    brokerDataList.add(brokerDataClone);
-    foundBrokerData = true;
-    //遍历brokerAddrs
-    for (final String brokerAddr : brokerDataClone.getBrokerAddrs().values()) {
-    //根据brokerAddr获取filterServerList，封装后写入到topicRouteData的filterServerTable中
-    List<String> filterServerList = this.filterServerTable.get(brokerAddr);
-    filterServerMap.put(brokerAddr, filterServerList);
-    }
-    }
-    }
-    }
-    } finally {
-    //释放读锁
-    this.lock.readLock().unlock();
-    }
+                Iterator<QueueData> it = queueDataList.iterator();
+                while (it.hasNext()) {
+                    QueueData qd = it.next();
+                    brokerNameSet.add(qd.getBrokerName());
+                }
+				//遍历从QueueData集合中提取的brokerName
+                for (String brokerName : brokerNameSet) {
+                    //根据brokerName从brokerAddrTable获取brokerData
+                    BrokerData brokerData = this.brokerAddrTable.get(brokerName);
+                    if (null != brokerData) {
+                        //克隆brokerData对象，并写入到topicRouteData的brokerDatas中
+                        BrokerData brokerDataClone = new BrokerData(brokerData.getCluster(), brokerData.getBrokerName(), (HashMap<Long, String>) brokerData.getBrokerAddrs().clone());
+                        brokerDataList.add(brokerDataClone);
+                        foundBrokerData = true;
+                        //遍历brokerAddrs
+                        for (final String brokerAddr : brokerDataClone.getBrokerAddrs().values()) {
+                            //根据brokerAddr获取filterServerList，封装后写入到topicRouteData的filterServerTable中
+                            List<String> filterServerList = this.filterServerTable.get(brokerAddr);
+                            filterServerMap.put(brokerAddr, filterServerList);
+                        }
+                    }
+                }
+            }
+        } finally {
+            //释放读锁
+            this.lock.readLock().unlock();
+        }
     } catch (Exception e) {
-    log.error("pickupTopicRouteData Exception", e);
+        log.error("pickupTopicRouteData Exception", e);
     }
 
     log.debug("pickupTopicRouteData {} {}", topic, topicRouteData);
 
     if (foundBrokerData && foundQueueData) {
-    return topicRouteData;
+        return topicRouteData;
     }
 
     return null;
-    }
+}
 ```
 
 上面代码封装了`topicRouteData`的`queueDatas`、`brokerDatas`和`filterServerTable`，还有`orderTopicConf`字段没封装，我们再看下这个字段是在什么时候封装的，我们向上看`RouteInfoManager#pickupTopicRouteData`的调用方法`DefaultRequestProcessor#getRouteInfoByTopic`，如下：
 
 ```java
 public RemotingCommand getRouteInfoByTopic(ChannelHandlerContext ctx,
-    RemotingCommand request) throws RemotingCommandException {
+                                           RemotingCommand request) throws RemotingCommandException {
     ......
-    //这块代码就是上面解析的代码，获取到topicRouteData对象
+	//这块代码就是上面解析的代码，获取到topicRouteData对象
     TopicRouteData topicRouteData = this.namesrvController.getRouteInfoManager().pickupTopicRouteData(requestHeader.getTopic());
 
     if (topicRouteData != null) {
-    //判断nameserver的orderMessageEnable配置是否打开
-    if (this.namesrvController.getNamesrvConfig().isOrderMessageEnable()) {
-    //如果配置打开了，根据namespace和topic名字获取kvConfig配置文件中顺序消息配置内容
-    String orderTopicConf =
-    this.namesrvController.getKvConfigManager().getKVConfig(NamesrvUtil.NAMESPACE_ORDER_TOPIC_CONFIG,
-    requestHeader.getTopic());
-    //封装orderTopicConf
-    topicRouteData.setOrderTopicConf(orderTopicConf);
-    }
+        //判断nameserver的orderMessageEnable配置是否打开
+        if (this.namesrvController.getNamesrvConfig().isOrderMessageEnable()) {
+            //如果配置打开了，根据namespace和topic名字获取kvConfig配置文件中顺序消息配置内容
+            String orderTopicConf =
+                this.namesrvController.getKvConfigManager().getKVConfig(NamesrvUtil.NAMESPACE_ORDER_TOPIC_CONFIG,
+                                                                        requestHeader.getTopic());
+            //封装orderTopicConf
+            topicRouteData.setOrderTopicConf(orderTopicConf);
+        }
 
-    byte[] content = topicRouteData.encode();
-    response.setBody(content);
-    response.setCode(ResponseCode.SUCCESS);
-    response.setRemark(null);
-    return response;
+        byte[] content = topicRouteData.encode();
+        response.setBody(content);
+        response.setCode(ResponseCode.SUCCESS);
+        response.setRemark(null);
+        return response;
     }
-    //如果没有获取到topic路由，那么reponseCode为TOPIC_NOT_EXIST
+	//如果没有获取到topic路由，那么reponseCode为TOPIC_NOT_EXIST
     response.setCode(ResponseCode.TOPIC_NOT_EXIST);
     response.setRemark("No topic route info in name server for the topic: " + requestHeader.getTopic()
-    + FAQUrl.suggestTodo(FAQUrl.APPLY_TOPIC_URL));
+                       + FAQUrl.suggestTodo(FAQUrl.APPLY_TOPIC_URL));
     return response;
-    }
+}
 ```
 
 结合这两个方法，我们可以总结出查找topic路由主要分为3个步骤：
@@ -1116,4 +1116,11 @@ public RemotingCommand getRouteInfoByTopic(ChannelHandlerContext ctx,
 
 + 启动流程注册JVM钩子用于优雅停机。这是一个编程技巧，我们在实际开发过程中，如果有使用线程池或者一些常驻线程任务时，可以考虑通过注册JVM钩子的方式，在JVM关闭前释放资源或者完成一些事情来保证优雅停机。
 + 更新路由表时需要通过加锁防止并发操作，这里使用的是锁粒度较少的读写锁，允许多个消息发送者并发读，保证消息发送时的高并发，但同一时刻nameserver只处理一个Broker心跳包，多个心跳包请求串行执行，这也是读写锁经典使用场景。
+
+## 6、参考资料
++ **书籍**
+  - RocketMQ技术内幕
+  - RocketMQ核心原理和实践
++ **文章**
+  - [Apache RocketMQ开发者指南](https://github.com/apache/rocketmq/tree/master/docs/cn)
 
